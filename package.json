@@ -1,0 +1,11 @@
+{
+  "name": "twilio-whatsapp-flask-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp business bot for LCD screen repair jobs",
+  "scripts": {
+    "test": "python tests.py"
+  },
+  "engines": {
+    "python": "3.11.9"
+  }
+}
