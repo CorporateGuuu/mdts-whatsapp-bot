@@ -53,3 +53,12 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+
+# Credential hygiene: keep only empty example templates
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
