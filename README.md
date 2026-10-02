@@ -35,7 +35,7 @@ pytest -q
 python tests.py
 ```
 
-Do not claim this repository as CI-verified until that workflow passes in GitHub Actions.
+**Verified:** the portfolio CI passes on `main`, including dependency installation, `pytest -q`, and `python tests.py` using deterministic non-secret test configuration.
 
 ## Environment contract
 
