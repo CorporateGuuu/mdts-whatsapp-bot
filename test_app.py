@@ -45,3 +45,27 @@ def test_environment_variables():
 
     for var in required_vars:
         assert var in env_content, f"Required environment variable {var} not found in .env.example"
+
+
+def test_healthz_is_liveness_only(client):
+    response = client.get('/healthz')
+
+    assert response.status_code == 200
+    assert response.get_json()['status'] == 'ok'
+    assert response.headers.get('X-Request-ID')
+
+
+def test_request_id_is_preserved(client):
+    response = client.get('/healthz', headers={'X-Request-ID': 'portfolio-test-request'})
+
+    assert response.headers['X-Request-ID'] == 'portfolio-test-request'
+
+
+def test_readyz_reports_dependency_state(client):
+    response = client.get('/readyz')
+    payload = response.get_json()
+
+    assert response.status_code in (200, 503)
+    assert payload['status'] in ('ready', 'degraded')
+    assert payload['checks']['database'] in ('ready', 'unavailable')
+    assert payload['checks']['twilio'] in ('configured', 'not_configured')
