@@ -26,6 +26,19 @@ The WhatsApp endpoint is expected to reject requests without a valid Twilio sign
 
 A separate security-remediation pull request is cleaning tracked configuration/credential artifacts and adding credential scanning. That work must not be described as fully closed until provider-side credential rotation/cutover and runtime configuration are verified.
 
+## Operational reliability
+
+The portfolio runtime now includes:
+
+- `/healthz` liveness semantics
+- `/readyz` dependency readiness checks
+- request correlation through `X-Request-ID`
+- Twilio webhook signature validation
+- explicit database/Twilio/S3 readiness states
+- documented persistent webhook idempotency design in `docs/ADR-001-webhook-idempotency.md`
+
+The idempotency ADR deliberately rejects an in-memory-only dedupe shortcut because that would not survive multiple workers or restarts.
+
 ## Verified CI target
 
 The portfolio CI introduced here installs the locked Python requirements and runs:
@@ -72,7 +85,7 @@ flask --app app run --host 0.0.0.0 --port 5000
 
 ## Portfolio role
 
-This is a **supporting backend/integration project**, not a flagship distributed-systems project. Its value is that it is small enough for an interviewer to review the webhook, persistence, and test boundaries quickly.
+This is a **portfolio-ready supporting backend/integration project**, not a flagship distributed-systems project. Its value is that it is small enough for an interviewer to review webhook security, persistence, operational readiness, request correlation, and test boundaries quickly.
 
 ## Hardening roadmap
 
