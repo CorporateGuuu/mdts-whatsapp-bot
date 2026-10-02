@@ -1,0 +1,11 @@
+aws_region        = "us-east-1"
+project_name      = "mdts-whatsapp-bot"
+container_port    = 5000
+desired_count     = 0
+container_image   = "public.ecr.aws/docker/library/python:3.12-slim"
+database_name     = "mdts"
+database_username = "mdts_admin"
+
+# Never commit database_password.
+# Supply it with:
+# export TF_VAR_database_password='replace-me'
