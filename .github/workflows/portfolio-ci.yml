@@ -22,6 +22,18 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run pytest
+        env:
+          TWILIO_ACCOUNT_SID: AC00000000000000000000000000000000
+          TWILIO_AUTH_TOKEN: test-token
+          TWILIO_WHATSAPP_NUMBER: whatsapp:+15555550123
+          DATABASE_URL: sqlite+pysqlite:///./ci-test.db
+          SECRET_KEY: ci-only-secret
         run: pytest -q
       - name: Run deployment smoke checks
+        env:
+          TWILIO_ACCOUNT_SID: AC00000000000000000000000000000000
+          TWILIO_AUTH_TOKEN: test-token
+          TWILIO_WHATSAPP_NUMBER: whatsapp:+15555550123
+          DATABASE_URL: sqlite+pysqlite:///./ci-test.db
+          SECRET_KEY: ci-only-secret
         run: python tests.py
