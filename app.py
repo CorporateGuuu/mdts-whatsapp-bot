@@ -1,16 +1,17 @@
 import os
 import re
 import urllib.request
+import uuid
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from flask import Flask, request, Response
+from flask import Flask, request, Response, g, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
 from twilio.request_validator import RequestValidator
 
 from sqlalchemy import (create_engine, Column, Integer, String, DateTime, Float,
-                        ForeignKey, Boolean, Text)
+                        ForeignKey, Boolean, Text, text)
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 
 import boto3
@@ -30,6 +31,16 @@ LABOR_PER_SCREEN = float(os.getenv("LABOR_PER_SCREEN", "50"))
 # --- Twilio & Flask ---
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 app = Flask(__name__)
+
+@app.before_request
+def assign_request_id():
+    incoming = request.headers.get("X-Request-ID")
+    g.request_id = incoming or str(uuid.uuid4())
+
+@app.after_request
+def attach_request_id(response):
+    response.headers["X-Request-ID"] = g.get("request_id", "unknown")
+    return response
 
 # --- DB setup ---
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
@@ -161,6 +172,31 @@ def sms(to_whatsapp: str, body: str, media_url: str | None = None):
     if media_url:
         kwargs["media_url"] = [media_url]
     client.messages.create(**kwargs)
+
+@app.route("/healthz", methods=["GET"])
+def healthz():
+    return jsonify({"status": "ok", "service": "mdts-whatsapp-bot"})
+
+@app.route("/readyz", methods=["GET"])
+def readyz():
+    checks = {
+        "database": "unknown",
+        "twilio": "configured" if (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_WHATSAPP_FROM) else "not_configured",
+        "s3": "configured" if AWS_S3_BUCKET else "not_configured",
+    }
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        checks["database"] = "ready"
+    except Exception:
+        checks["database"] = "unavailable"
+
+    ready = checks["database"] == "ready" and checks["twilio"] == "configured"
+    return jsonify({
+        "status": "ready" if ready else "degraded",
+        "checks": checks,
+        "request_id": g.get("request_id"),
+    }), 200 if ready else 503
 
 # --- WhatsApp webhook ---
 @app.route("/whatsapp", methods=["POST"])
