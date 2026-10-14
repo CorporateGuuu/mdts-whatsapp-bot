@@ -162,9 +162,9 @@ resource "aws_iam_role" "ecs_execution" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
+      Effect    = "Allow"
       Principal = { Service = "ecs-tasks.amazonaws.com" }
-      Action = "sts:AssumeRole"
+      Action    = "sts:AssumeRole"
     }]
   })
 }
@@ -219,9 +219,9 @@ resource "aws_ecs_task_definition" "app" {
   execution_role_arn       = aws_iam_role.ecs_execution.arn
 
   container_definitions = jsonencode([{
-    name         = "app"
-    image        = var.container_image
-    essential    = true
+    name      = "app"
+    image     = var.container_image
+    essential = true
     portMappings = [{
       containerPort = var.container_port
       hostPort      = var.container_port
